@@ -61,7 +61,11 @@ echo "Installing pip dependencies"
 pip install --quiet -r requirements.txt
 
 echo "----Testing everything is working----"
-docker run hello-world
+if docker run hello-world > /dev/null 2>&1; then
+    echo "Docker is working"
+else
+    echo "Docker is not working"
+fi
 docker compose version
 
 export ip=$(curl -s ipinfo.io/ip)
