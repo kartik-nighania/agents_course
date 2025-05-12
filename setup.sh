@@ -68,7 +68,7 @@ echo "----Testing everything is working----"
 docker run hello-world
 docker compose version
 
-export ip=$(curl ipinfo.io/ip)
+export ip=$(curl -s ipinfo.io/ip)
 echo "Found IP: $ip"
 
 test_port() {

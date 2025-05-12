@@ -2,7 +2,7 @@
 
 export LAB_PORT=${LAB_PORT:-8000}
 export TOKEN="agents_course"
-export ip=$(curl ipinfo.io/ip)
+export ip=$(curl -s ipinfo.io/ip)
 
 rm -rf jupyter.log
 touch jupyter.log
