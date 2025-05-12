@@ -50,7 +50,7 @@ elif [ -d "agents_course" ]; then
     cd agents_course
 else
     echo "Cloning agents_course repository"
-    git clone https://github.com/kartik-nighania/agents_course.git 
+    git clone -q https://github.com/kartik-nighania/agents_course.git 
     cd agents_course
 fi
 git checkout main
