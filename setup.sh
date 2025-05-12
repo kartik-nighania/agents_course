@@ -2,9 +2,10 @@
 
 # install: curl -s https://raw.githubusercontent.com/kartik-nighania/agents_course/main/setup.sh | sudo bash
 
-export LAB_PORT=8000
-export PORT=9000
+export LAB_PORT=${LAB_PORT:-8000}
+export PORT=${PORT:-9000}
 export DEBIAN_FRONTEND=noninteractive
+PORTS=($LAB_PORT $PORT)
 
 echo "Installing dependencies"
 sudo apt-get update -q > /dev/null && sudo apt-get install -y -q \
@@ -21,7 +22,8 @@ if ! command -v docker &> /dev/null; then
     sudo sh ./get-docker.sh
     sudo groupadd docker
     sudo usermod -aG docker $USER
-    newgrp docker
+    systemctl enable docker.service
+    systemctl enable containerd.service
     sudo apt-get install docker-compose-plugin
     rm -rf ./get-docker.sh
 fi
@@ -51,24 +53,68 @@ source venv/bin/activate
 echo "Installing pip dependencies"
 pip install --quiet -r requirements.txt
 
-echo "\n\n ----Testing everything is working----\n\n"
+echo "----Testing everything is working----"
 docker run hello-world
 docker compose version
 
-# check if ports are open
-ip=$(sudo netstat -tulpen | grep "$LAB_PORT" | awk '{print $5}')
-for port in "$LAB_PORT" "$PORT"; do
-    if ! sudo netstat -tulpen | grep -q "$port"; then
-        echo "port $port is not open"
-        exit 1
-    fi
-    echo "port $port is open with ip: $ip"
-done
+export ip=$(curl ipinfo.io/ip)
+echo "Found IP: $ip"
 
-echo "\n\n ----Launching Jupyter lab----\n\n"
-jupyter lab --ip=0.0.0.0 --port=8000 --no-browser --allow-root
+test_port() {
+    local port=$1
+
+    echo "Checking and killing any existing processes on port $port..."
+    local pid=$(lsof -t -i:$port)
+    if [ -n "$pid" ]; then
+        echo "Killing process $pid on port $port"
+        kill -9 $pid
+        sleep 1
+    else
+        echo "No process found on port $port"
+    fi
+
+    echo "Starting Python HTTP server on port $port..."
+    python3 -m http.server $port &
+    server_pid=$!
+    sleep 2
+    
+    # Check if server is working by making an HTTP request
+    echo "Checking if server is running on $ip:$port..."
+    if curl -s --head http://$ip:$port > /dev/null; then
+        echo "Server is running correctly on $ip:$port"
+        result=0
+    else
+        echo "ERROR: Server failed to start on $ip:$port"
+        result=1
+    fi
+
+    echo "Final cleanup for $ip:$port..."
+    pid=$(lsof -t -i:$port)
+    if [ -n "$pid" ]; then
+        echo "Killing remaining process $pid on $ip:$port"
+        kill -9 $pid
+        sleep 1
+    fi
+    
+    return $result
+}
+
+# Test port and exit if failed
+failed=0
+for port in "${PORTS[@]}"; do
+    if ! test_port $port; then
+        failed=1
+    fi
+done
+if [ $failed -eq 1 ]; then
+    echo "One or more port tests failed. Exiting."
+    exit 1
+fi
+
+echo "----Launching Jupyter lab----"
+jupyter lab --ip=0.0.0.0 --port=$LAB_PORT --no-browser --allow-root
 
 
 # launch lab
 source venv/bin/activate
-echo "\n\n ----Goto: http://$ip:$LAB_PORT ----\n\n"
+echo "----Goto: http://$ip:$LAB_PORT ----"
