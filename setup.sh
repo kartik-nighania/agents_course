@@ -104,7 +104,5 @@ for port in "${PORTS[@]}"; do
     fi
 done
 
-echo ""
-echo "----Launching Jupyter lab----"
 chmod +x start_lab.sh
 ./start_lab.sh
