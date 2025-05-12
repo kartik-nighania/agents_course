@@ -44,8 +44,9 @@ git checkout main
 git pull
 
 # create venv and install dependencies
-rm -rf venv || true
-python3 -m venv venv
+if [ ! -d "venv" ]; then
+    python3 -m venv venv
+fi
 source venv/bin/activate
 echo "Installing pip dependencies"
 pip install --quiet -r requirements.txt
