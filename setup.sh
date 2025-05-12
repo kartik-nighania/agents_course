@@ -108,4 +108,6 @@ done
 echo ""
 echo "----Launching Jupyter lab----"
 source venv/bin/activate
-jupyter lab --ip=$ip --port=$LAB_PORT --no-browser -y
+jupyter lab --ip=0.0.0.0 --port=$LAB_PORT --no-browser -y --NotebookApp.token=$TOKEN & 
+
+echo "----Goto: http://$ip:$LAB_PORT/lab?token=$TOKEN ----"
