@@ -6,6 +6,7 @@ export LAB_PORT=${LAB_PORT:-8000}
 export PORT=${PORT:-9000}
 export DEBIAN_FRONTEND=noninteractive
 PORTS=($LAB_PORT $PORT)
+export TOKEN="agents_course"
 
 echo "Installing dependencies"
 sudo apt-get update -q > /dev/null && sudo apt-get install -y -q \
@@ -104,10 +105,7 @@ for port in "${PORTS[@]}"; do
     fi
 done
 
+echo ""
 echo "----Launching Jupyter lab----"
-jupyter lab --ip=0.0.0.0 --port=$LAB_PORT --no-browser --allow-root
-
-
-# launch lab
 source venv/bin/activate
-echo "----Goto: http://$ip:$LAB_PORT ----"
+jupyter lab --ip=$ip --port=$LAB_PORT --no-browser -y
