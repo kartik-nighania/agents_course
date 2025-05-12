@@ -4,13 +4,16 @@
 
 export LAB_PORT=8000
 export PORT=9000
+export DEBIAN_FRONTEND=noninteractive
 
-sudo apt-get update && sudo apt-get install -y \
+echo "Installing dependencies"
+sudo apt-get update -q > /dev/null && sudo apt-get install -y -q \
     git \
     curl \
     wget \
     python3-pip \
-    python3-venv
+    net-tools \
+    python3-venv > /dev/null
 
 # Install Docker and Docker Compose if not installed
 if ! command -v docker &> /dev/null; then
@@ -27,7 +30,17 @@ fi
 if [ ! -d "agents_course" ]; then
     git clone https://github.com/kartik-nighania/agents_course.git
 fi
-cd agents_course
+
+# change to course directory
+if [ "$(basename "$PWD")" = "agents_course" ]; then
+    echo "Already in agents_course directory"
+elif [ -d "agents_course" ]; then
+    echo "Changing to agents_course directory"
+    cd agents_course
+else
+    echo "agents_course directory not found, exiting"
+    exit 1
+fi
 git checkout main
 git pull
 
@@ -35,31 +48,20 @@ git pull
 rm -rf venv || true
 python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
+echo "Installing pip dependencies"
+pip install --quiet -r requirements.txt
 
 echo "\n\n ----Testing everything is working----\n\n"
 docker run hello-world
 docker compose version
-if [ ! -d "agents_course" ]; then
-    echo "agents_course directory not found"
-    exit 1
-fi
-echo "agents_course directory found"
-# check if venv is activated
-if [ ! -d "venv" ]; then
-    echo "venv directory not found"
-    exit 1
-fi
-source venv/bin/activate
-echo "venv activated"
 
 # check if ports are open
+ip=$(sudo netstat -tulpen | grep "$LAB_PORT" | awk '{print $5}')
 for port in "$LAB_PORT" "$PORT"; do
     if ! sudo netstat -tulpen | grep -q "$port"; then
         echo "port $port is not open"
         exit 1
     fi
-    ip=$(sudo netstat -tulpen | grep "$port" | awk '{print $5}')
     echo "port $port is open with ip: $ip"
 done
 
@@ -68,4 +70,5 @@ jupyter lab --ip=0.0.0.0 --port=8000 --no-browser --allow-root
 
 
 # launch lab
+source venv/bin/activate
 echo "\n\n ----Goto: http://$ip:$LAB_PORT ----\n\n"
