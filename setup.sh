@@ -28,20 +28,17 @@ if ! command -v docker &> /dev/null; then
     rm -rf ./get-docker.sh
 fi
 
-# get course repo
-if [ ! -d "agents_course" ]; then
-    git clone https://github.com/kartik-nighania/agents_course.git
-fi
 
-# change to course directory
+# install course repo
 if [ "$(basename "$PWD")" = "agents_course" ]; then
     echo "Already in agents_course directory"
 elif [ -d "agents_course" ]; then
     echo "Changing to agents_course directory"
     cd agents_course
 else
-    echo "agents_course directory not found, exiting"
-    exit 1
+    echo "Cloning agents_course repository"
+    git clone https://github.com/kartik-nighania/agents_course.git 
+    cd agents_course
 fi
 git checkout main
 git pull
