@@ -80,7 +80,7 @@ test_port() {
     
     # Check if server is working by making an HTTP request
     echo "Checking if server is running on $ip:$port..."
-    if curl -s --head http://$ip:$port > /dev/null; then
+    if curl -s --max-time 7 --head http://$ip:$port > /dev/null; then
         echo "Server is running correctly on $ip:$port"
         result=0
     else
@@ -99,17 +99,13 @@ test_port() {
     return $result
 }
 
-# Test port and exit if failed
-failed=0
+# Test ports
 for port in "${PORTS[@]}"; do
     if ! test_port $port; then
-        failed=1
+        echo ""
+        echo "Port http://$ip:$port test failed"
     fi
 done
-if [ $failed -eq 1 ]; then
-    echo "One or more port tests failed. Exiting."
-    exit 1
-fi
 
 echo "----Launching Jupyter lab----"
 jupyter lab --ip=0.0.0.0 --port=$LAB_PORT --no-browser --allow-root
