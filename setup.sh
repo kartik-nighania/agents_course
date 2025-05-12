@@ -6,6 +6,7 @@ export LAB_PORT=${LAB_PORT:-8000}
 export PORT=${PORT:-9000}
 export DEBIAN_FRONTEND=noninteractive
 PORTS=($LAB_PORT $PORT)
+urls=("openai.com" "langchain.com" "docker.com" "pypi.org" "ubuntu.com" "github.com" "ipinfo.io")
 
 echo "Installing dependencies"
 sudo apt-get update -q > /dev/null && sudo apt-get install -y -q \
@@ -15,6 +16,18 @@ sudo apt-get update -q > /dev/null && sudo apt-get install -y -q \
     python3-pip \
     net-tools \
     python3-venv > /dev/null
+
+
+failed_count=0
+
+echo "Testing connectivity to all domains..."
+
+# Check domains
+for domain in "${urls[@]}"; do
+  if ! timeout 10 ping -c 3 -W 3 $domain > /dev/null 2>&1; then
+    echo "❌ $domain is NOT accessible"
+  fi
+done
 
 # Install Docker and Docker Compose if not installed
 if ! command -v docker &> /dev/null; then
