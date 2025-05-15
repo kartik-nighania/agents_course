@@ -1,10 +1,14 @@
 #! /bin/bash
 
-# install: curl -s https://raw.githubusercontent.com/kartik-nighania/agents_course/main/setup.sh | sudo bash
+# remote install: curl -s https://raw.githubusercontent.com/kartik-nighania/agents_course/main/setup.sh | sudo bash
+# local install: sudo SKIP_GIT=true USE_LOCALHOST=true bash setup.sh
 
 export LAB_PORT=${LAB_PORT:-8000}
 export PORT=${PORT:-9000}
 export DEBIAN_FRONTEND=noninteractive
+
+SKIP_GIT=${SKIP_GIT:-false}
+USE_LOCALHOST=${USE_LOCALHOST:-false}
 
 PORTS=($LAB_PORT $PORT)
 urls=("openai.com" "langchain.com" "docker.com" "pypi.org" "ubuntu.com" "github.com" "ipinfo.io")
@@ -39,18 +43,22 @@ fi
 
 
 # install course repo
-if [ "$(basename "$PWD")" = "agents_course" ]; then
-    echo "Already in agents_course directory"
-elif [ -d "agents_course" ]; then
-    echo "Changing to agents_course directory"
-    cd agents_course
+if [ "$SKIP_GIT" = "true" ]; then
+    echo "Skipping git pull"
 else
-    echo "Cloning agents_course repository"
-    git clone -q https://github.com/kartik-nighania/agents_course.git 
-    cd agents_course
+    if [ "$(basename "$PWD")" = "agents_course" ]; then
+        echo "Already in agents_course directory"
+    elif [ -d "agents_course" ]; then
+        echo "Changing to agents_course directory"
+        cd agents_course
+    else
+        echo "Cloning agents_course repository"
+        git clone -q https://github.com/kartik-nighania/agents_course.git 
+        cd agents_course
+    fi
+    git checkout main
+    git pull
 fi
-git checkout main
-git pull
 
 # create venv and install dependencies
 if [ ! -d "venv" ]; then
@@ -68,8 +76,12 @@ else
 fi
 docker compose version
 
-export ip=$(curl -s ipinfo.io/ip)
-echo "Found IP: $ip"
+if [ "$USE_LOCALHOST" = "true" ]; then
+    export ip="localhost"
+else
+    export ip=$(curl -s ipinfo.io/ip)
+fi
+echo "Using IP: http://$ip"
 
 test_port() {
     local port=$1

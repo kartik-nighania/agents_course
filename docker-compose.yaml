@@ -1,0 +1,57 @@
+# docker compose --profile mcp down
+# docker compose --profile mcp build
+# docker compose --profile mcp up -d --force-recreate
+# docker logs mcp -f
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    profiles:
+      - postgres
+      - all
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-mydb}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    restart: unless-stopped
+    profiles:
+      - qdrant
+      - all
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    container_name: mcp
+    restart: unless-stopped
+    profiles:
+      - mcp
+      - all
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+volumes:
+  postgres_data:
+    driver: local
+  qdrant_data:
+    driver: local
