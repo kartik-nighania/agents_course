@@ -25,3 +25,4 @@ langchain-community>=0.3.18
 
 langchain-mcp-adapters
 langchain_qdrant
+uvicorn[standard]

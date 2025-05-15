@@ -20,6 +20,7 @@ sudo apt-get update -q > /dev/null && sudo apt-get install -y -q \
     wget \
     python3-pip \
     net-tools \
+    libpq-dev \
     python3-venv > /dev/null
 
 echo "Testing connectivity to all domains..."
